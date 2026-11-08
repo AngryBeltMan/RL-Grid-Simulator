@@ -1,4 +1,5 @@
 #include "acutest.h"
+#include "grid_tests.c"
 // test_q_table.c
 //
 // Unit tests for src/bellman/q_table.c using acutest.h
@@ -17,7 +18,7 @@
 // QTABLE_new
 // ---------------------------------------------------------------------------
 
-void test_new_not_null(void) {
+void q_table_test_new_not_null(void) {
     q_table_t table = QTABLE_new(N_STATES);
     TEST_CHECK(table != NULL);
 }
@@ -377,7 +378,7 @@ void test_clear_makes_deleteEntry_fail(void) {
 
 TEST_LIST = {
     // QTABLE_new
-    { "new/not_null",                         test_new_not_null },
+    { "new/not_null",                         q_table_test_new_not_null },
     { "new/all_entries_nan",                  test_new_all_entries_nan },
     { "new/single_state",                     test_new_single_state },
 
@@ -424,6 +425,41 @@ TEST_LIST = {
     { "clear/fresh_table",                    test_clear_on_fresh_table },
     { "clear/reuse",                          test_clear_then_reuse },
     { "clear/deleteEntry_fails_after",        test_clear_makes_deleteEntry_fail },
+    // grid_tests.c
+    // GRID_new / nStates / player position
+    { "new/not_null",                          test_new_not_null },
+    { "new/nStates",                           test_new_nStates },
+    { "new/player_starts_at_zero",             test_new_player_starts_at_zero },
+    { "playerPosition/roundtrip",              test_setPlayerPosition_roundtrip },
+
+    // GRID_stepProcess
+    { "step/right_down_from_origin",           test_step_right_down_from_origin },
+    { "step/matches_expected_every_state",     test_step_matches_expected_for_every_state },
+    { "step/left_up_blocked_at_edges",         test_step_left_up_blocked_at_top_left_edges },
+    { "step/inverse_returns_to_origin",        test_step_inverse_returns_to_origin },
+    { "step/does_not_move_player",             test_step_does_not_move_player },
+    { "step/reward_normal_tile",               test_step_reward_normal_tile },
+    { "step/reward_wall",                      test_step_reward_wall },
+    { "step/null_reward_pointer",              test_step_null_reward_pointer_ok },
+    { "step/single_tile_all_blocked",          test_step_single_tile_grid_all_blocked },
+
+    // GRID_changeTileType
+    { "changeTileType/changes_reward",         test_changeTileType_changes_reward },
+    { "changeTileType/other_tiles_untouched",  test_changeTileType_does_not_affect_other_tiles },
+    { "changeTileType/back_to_normal",         test_changeTileType_back_to_normal },
+    { "changeTileType/first_and_last_tile",    test_changeTileType_first_and_last_tile },
+
+    // GRID_takeAction
+    { "takeAction/moves_player",               test_takeAction_moves_player_right_down },
+    { "takeAction/returns_tile_reward",        test_takeAction_returns_tile_reward },
+    { "takeAction/special_tile_reward",        test_takeAction_reward_of_special_tile },
+    { "takeAction/wall_keeps_position",        test_takeAction_wall_keeps_position },
+    { "takeAction/wall_bottom_right",          test_takeAction_wall_bottom_right },
+    { "takeAction/walk_to_corner",             test_takeAction_walk_to_bottom_right_corner },
+    { "takeAction/agrees_with_stepProcess",    test_takeAction_agrees_with_stepProcess },
+
+    // GRID_free
+    { "free/does_not_crash",                   test_free_does_not_crash },
 
     { NULL, NULL } // End of tests entry
 };

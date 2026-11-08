@@ -1,3 +1,5 @@
+// src/simulation/grid.c
+
 #include <simulation/grid.h>
 #include <simulation/state.h>
 
@@ -24,7 +26,6 @@ grid_t GRID_new(uint32_t rows, uint32_t columns) {
         }
     }
 
-
     // Link of the states together by the relative position
     for (int x = 0; x < columns - 1 ; x++) {
         for (int y = 0; y < rows - 1; y++) {
@@ -35,12 +36,22 @@ grid_t GRID_new(uint32_t rows, uint32_t columns) {
             STATE_link(currState, downState, ACTION_DOWN);
         }
     }
-    // The nested loop always misses the bottom right state, so its left and up direction adjacent states are linked
-    state_t bottomLeftState = grid->stateGrid[grid->nStates - 1];
-    state_t leftAdjBottomLeftState = grid->stateGrid[grid->nStates - 2];
-    state_t upAdjBottomLeftState = grid->stateGrid[grid->nStates - 1 - columns];
-    STATE_link(bottomLeftState, leftAdjBottomLeftState, ACTION_LEFT);
-    STATE_link(bottomLeftState, upAdjBottomLeftState, ACTION_UP);
+
+    // Link the last columns
+    for (int row = 0;  row < rows - 1; row++) {
+        state_t topColumn = grid->stateGrid[columns * (row + 1) - 1];
+        state_t bottomColumn = grid->stateGrid[columns * (row + 2) - 1];
+        STATE_link(topColumn, bottomColumn, ACTION_DOWN);
+    }
+
+    // Link the last rows
+    size_t bottomRow = (rows - 1) * columns;
+    for (int col = 0;  col < columns - 1; col++) {
+        state_t leftColumn = grid->stateGrid[bottomRow + col];
+        state_t rightColumn = grid->stateGrid[bottomRow + col + 1];
+        STATE_link(leftColumn, rightColumn, ACTION_RIGHT);
+    }
+
     return grid;
 }
 
@@ -68,8 +79,6 @@ uint32_t GRID_nStates(grid_t grid) {
 double GRID_takeAction(grid_t grid, action_t action) {
     assert(grid);
     int32_t result = STATE_getAdjacentIndex(grid->stateGrid[grid->playerPosition], action);
-    // result underflows
-    printf("%i\n", result);
     if (result >= 0) {
         grid->playerPosition = result;
         return REWARDS[STATE_getType(grid->stateGrid[result])];
@@ -80,7 +89,7 @@ double GRID_takeAction(grid_t grid, action_t action) {
 
 uint32_t GRID_stepProcess(grid_t grid, uint32_t stateT, action_t actionT, double *reward) {
     assert(grid);
-    assert(stateT < grid->nStates * grid->nColumns);
+    assert(stateT < grid->nStates);
     state_t sT = grid->stateGrid[stateT];
     int32_t sTPlusOne = STATE_getAdjacentIndex(sT, actionT);
     if (sTPlusOne >= 0) {
@@ -89,7 +98,7 @@ uint32_t GRID_stepProcess(grid_t grid, uint32_t stateT, action_t actionT, double
         return sTPlusOne;
     }
     if (reward)
-        *reward = REWARDS[REWARDS_LEN - 1];
+        *reward = REWARDS[REWARDS_LEN - 1]; // last reward is the reward for attempting to travel to a NULL state.
     return stateT;
 }
 

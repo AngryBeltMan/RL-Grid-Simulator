@@ -20,6 +20,7 @@ state_t STATE_new(state_types_t type, uint32_t index) {
 
 void STATE_link(state_t start, state_t end, action_t action) {
     assert(action != ACTION_STAY && start && end);
+    assert(start != end);
     start->adjacentStates[action] = end;
     end->adjacentStates[INVERSE_ACTION[action]] = start;
 }

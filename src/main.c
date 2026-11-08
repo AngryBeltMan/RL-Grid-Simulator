@@ -1,14 +1,12 @@
 #include "bellman/policy_table.h"
 #include "bellman/q_table.h"
-#include "common.h"
 #include "training/model_policy_evaluation.h"
-#include <openssl/rand.h>
-#include <simulation/grid.h>
+#include <training/policy_iteration.h>
 
 int main(int argc, char* args[]) {
     // strtod
     const size_t gridSideLen = 5;
-
+    const size_t nStates = gridSideLen * gridSideLen;
     const int screenWidth = gridSideLen * 100;
     const int screenHeight = gridSideLen * 100;
     const int targetFPS = 30;
@@ -24,15 +22,23 @@ int main(int argc, char* args[]) {
     q_table_t qTableScratch = QTABLE_new(gridSideLen * gridSideLen);
 
     double greedyProb[N_ACTIONS];
+
+    double *v = calloc(gridSideLen * gridSideLen, sizeof(double));
     uint8_t b;
-    for (int i = 0; i < 1000; i++) {
-        RAND_bytes(&b, sizeof(uint8_t));
-        b %= gridSideLen * gridSideLen; // constrain to a valid state index
-        double discountedReturn = evaluatePolicy(policy, qTable, qTableScratch, grid, b, 25);
-        action_t highestAction = QTABLE_highestAction(qTable, b);
-        memset(greedyProb, 0, sizeof(double) * N_ACTIONS);
-        greedyProb[highestAction] = 1.0;
-        PT_setAction(policy, b, greedyProb);
+    for (int i = 0; i < 4; i++) {
+        // RAND_bytes(&b, sizeof(uint8_t));
+        // b %= gridSideLen * gridSideLen; // constrain to a valid state index
+        // double discountedReturn = evaluatePolicy(policy, qTable, qTableScratch, grid, b, 25);
+
+        // v = truncatedPolicyIteration(policy, grid, qTable, 9, v);
+        // v = policyIteration(policy, grid, qTable, 0.001, v);
+        v = valueIteration(policy, grid, qTable, v);
+        assert(v);
+        // memset(v, 0, sizeof(double) * gridSideLen * gridSideLen);
+        // action_t highestAction = QTABLE_highestAction(qTable, b);
+        // memset(greedyProb, 0, sizeof(double) * N_ACTIONS);
+        // greedyProb[highestAction] = 1.0;
+        // PT_setAction(policy, b, greedyProb);
         QTABLE_clear(qTable);
         // QTABLE_clearDependent(qTable, grid, policy, b);
 

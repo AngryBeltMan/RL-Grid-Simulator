@@ -51,7 +51,6 @@ policy_table_t PT_newRandomized(uint32_t size) {
 
     for (uint32_t i = 0; i < size; i++)
         pt->stateActions[i] = SA_stdRand();
-    SA_print(pt->stateActions[0]);
     return pt;
 }
 
